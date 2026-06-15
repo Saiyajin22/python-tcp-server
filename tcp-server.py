@@ -1,18 +1,20 @@
 import socket
-import threading
+from concurrent.futures import ThreadPoolExecutor
 
 bind_ip = "0.0.0.0"
 bind_port = 9999
 
+# Limit the pool to 10 concurrent worker threads
+executor = ThreadPoolExecutor(max_workers=10)
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((bind_ip, bind_port))
 # we tell the server to start listening with
-# a maximum backlog of connections set to 5
+# a maximum backlog of connections
 server.listen(10)
 
 print(f"[+] Listening on port {bind_ip} : {bind_port}")
 
-
+ 
 def handle_client(client_socket: socket.socket):
     chunks = []
     while True:
@@ -39,6 +41,7 @@ while True:
     # the remote connection details into the addr variable
     client, addr = server.accept()
     print(f"[+] Accepted connection from: {addr[0]}:{addr[1]}")
-    # spin up our client thread to handle the incoming data
-    client_handler = threading.Thread(target=handle_client, args=(client,))
-    client_handler.start()
+    
+    # Submit the connection to the thread pool. 
+    # If 10 threads are already busy, the new task waits until one finishes.
+    executor.submit(handle_client, client)
