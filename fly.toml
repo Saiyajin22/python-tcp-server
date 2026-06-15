@@ -1,0 +1,31 @@
+# fly.toml file for deploying the TCP Server to Fly.io
+app = "your-tcp-server-app"
+primary_region = "ams" # Change this to your preferred region (e.g., "lax", "iad", "cdg")
+
+[build]
+  dockerfile = "Dockerfile"
+
+[[services]]
+  internal_port = 9999
+  protocol = "tcp"
+
+  [services.concurrency]
+    hard_limit = 25
+    soft_limit = 20
+    type = "connections"
+
+  [[services.ports]]
+    port = 9999
+    # --- CHOOSE ONE OF THE CONFIGURATIONS BELOW ---
+    
+    # Configuration 1: Raw TCP (No TLS)
+    # Allows plain TCP connections. 
+    # NOTE: To use this over IPv4, you must allocate a dedicated IPv4 address (costs ~$2/mo).
+    # Otherwise, you can connect over IPv6 for free.
+    # handlers = []
+    
+    # Configuration 2: TLS-Terminated TCP
+    # Fly terminates SSL/TLS and passes raw TCP to your application.
+    # Allows you to use the free shared IPv4 address.
+    # To use this, uncomment the line below and comment out the handlers = [] line above:
+    handlers = ["tls"]
